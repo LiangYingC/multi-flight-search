@@ -1,30 +1,24 @@
-import requests
 import json
+import urllib.parse
+import urllib.request
 from pathlib import Path
 
 """
 How to use it:
-1. Get test app token from https://developers.amadeus.com/
-2. After searching price, result will be stored in ./test or ./prod
+1. Get an API key from https://serpapi.com/manage-api-key
+2. After searching price, result will be stored in ./results
 3. Use view.py to view result
-4. If you want to get real price, you need to activate prod token. 
-   (need credict card & sign contract, but there is free quota)
+4. The free plan allows 250 searches per month, and one combination costs one
+   search, so the cache below matters. Failed searches are not cached.
 """
 
-is_test = False
-folder = "./test" if is_test else "./prod"
+folder = "./results"
+Path(folder).mkdir(parents=True, exist_ok=True)
 
-# Get access token from https://developers.amadeus.com/
-# For production usage, you need to use credit card & sign contract to get token
-# But there is free quota.
+# Get the API key from https://serpapi.com/manage-api-key
 token = ""
 
-# Use test for testing script correctness, use prod for correct price
-endpoint = (
-    "https://test.api.amadeus.com/v2/shopping/flight-offers"
-    if is_test
-    else "https://api.amadeus.com/v2/shopping/flight-offers"
-)
+endpoint = "https://serpapi.com/search.json"
 
 # SGN: 胡志明市國際機場
 # TPE: 台北桃園國際機場
@@ -62,49 +56,39 @@ def search(flights):
     """
     flights: list of dicts with keys: origin, destination, date
     """
-    payload = {
-        "currencyCode": "TWD",
-        "originDestinations": [
-            {
-                "id": str(i + 1),
-                "originLocationCode": flight["origin"],
-                "destinationLocationCode": flight["destination"],
-                "departureDateTimeRange": {"date": flight["date"]},
-            }
-            for i, flight in enumerate(flights)
-        ],
-        "travelers": [
-            {"id": "1", "travelerType": "ADULT"},
-            {"id": "2", "travelerType": "ADULT"},
-        ],
-        "sources": ["GDS"],
-        "searchCriteria": {
-            "maxFlightOffers": 250,
-            "flightFilters": {
-                "cabinRestrictions": [
-                    {
-                        "cabin": "ECONOMY",
-                        "coverage": "MOST_SEGMENTS",
-                        "originDestinationIds": [
-                            str(i + 1) for i in range(len(flights))
-                        ],
-                    }
-                ],
-                "connectionRestriction": {"maxNumberOfConnections": 0},
-                # CI: 中華航空
-                # BR: 長榮航空
-                # JX: 星宇航空
-                # uncomment this line to limit airlines
-                # "carrierRestrictions": {"includedCarrierCodes": ["BR", "CI", "JX"]},
-            },
-        },
+    params = {
+        "engine": "google_flights",
+        "api_key": token,
+        "type": "3",  # multi-city
+        "multi_city_json": json.dumps(
+            [
+                {
+                    "departure_id": flight["origin"],
+                    "arrival_id": flight["destination"],
+                    "date": flight["date"],
+                }
+                for flight in flights
+            ]
+        ),
+        "adults": "2",
+        "travel_class": "1",  # ECONOMY
+        "currency": "TWD",
+        "gl": "tw",
+        "stops": "1",  # nonstop only, was maxNumberOfConnections: 0
+        # CI: 中華航空
+        # BR: 長榮航空
+        # JX: 星宇航空
+        # uncomment this line to limit airlines
+        # "include_airlines": "BR,CI,JX",
     }
 
-    res = requests.post(
-        endpoint, headers={"Authorization": f"Bearer {token}"}, json=payload
+    res = urllib.request.urlopen(
+        f"{endpoint}?{urllib.parse.urlencode(params)}", timeout=120
     )
-    res.raise_for_status()
-    data = res.json()
+    data = json.load(res)
+    # The API answers 200 with an error field when a query returns nothing
+    if data.get("error"):
+        raise RuntimeError(data["error"])
     return data
 
 
