@@ -2,7 +2,7 @@ import glob
 import json
 from pathlib import Path
 
-folder_path = './prod'
+folder_path = './results'
 pattern = '*_raw.json'
 
 # Method 1: Using glob with specific pattern
@@ -41,11 +41,14 @@ result = []
 no_data_cnt = 0
 for item in flight_data:
     journey = item['filename']
-    if len(item.get('data', {}).get('data', [])) == 0:
+    # An offer price covers the whole itinerary for both adults
+    offers = (item['data'].get('best_flights') or []) + (item['data'].get('other_flights') or [])
+    prices = [offer['price'] for offer in offers if offer.get('price')]
+    if len(prices) == 0:
         # print(f"Skip {journey} because no data")
         no_data_cnt += 1
         continue
-    price = float(item['data']['data'][0]['price']['grandTotal']) / 2
+    price = min(prices) / 2
     result.append({
         'price': price,
         'journey': journey
