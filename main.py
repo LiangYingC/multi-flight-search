@@ -108,7 +108,9 @@ def search(flights):
         # CI: 中華航空
         # BR: 長榮航空
         # JX: 星宇航空
-        # uncomment this line to limit airlines
+        # uncomment this line to limit airlines. Codeshares count as a match,
+        # so a flight operated by another carrier can still show up when the
+        # ticket is sold by one of these; see ticket_also_sold_by in the result.
         # "include_airlines": "BR,CI,JX",
     }
 
