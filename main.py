@@ -1,22 +1,39 @@
 import json
+import os
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
 """
 How to use it:
-1. Get an API key from https://serpapi.com/manage-api-key
-2. After searching price, result will be stored in ./results
-3. Use view.py to view result
-4. The free plan allows 250 searches per month, and one combination costs one
+1. Get a free API key from https://serpapi.com/manage-api-key
+2. Put it into .env as `SERPAPI_KEY=xxx` (.env is git-ignored)
+3. After searching price, result will be stored in ./results
+4. Use view.py to view result
+5. The free plan allows 250 searches per month, and one combination costs one
    search, so the cache below matters. Failed searches are not cached.
 """
 
 folder = "./results"
 Path(folder).mkdir(parents=True, exist_ok=True)
 
+def load_api_key():
+    """Read SERPAPI_KEY from the environment, falling back to ./.env"""
+    key = os.environ.get("SERPAPI_KEY", "").strip()
+    if not key and Path(".env").exists():
+        for line in Path(".env").read_text().splitlines():
+            name, _, value = line.partition("=")
+            if name.strip() == "SERPAPI_KEY":
+                key = value.strip()
+                break
+    if not key:
+        raise SystemExit("SERPAPI_KEY is not set. Add `SERPAPI_KEY=<key>` to ./.env")
+    return key
+
+
 # Get the API key from https://serpapi.com/manage-api-key
-token = ""
+# The key is read from .env so it never ends up in version control.
+token = load_api_key()
 
 endpoint = "https://serpapi.com/search.json"
 
