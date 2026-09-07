@@ -48,6 +48,12 @@ endpoint = "https://serpapi.com/search.json"
 # SYD: 雪梨機場
 # MEL: 墨爾本機場
 # BNE: 布里斯本機場
+# PER: 伯斯機場
+# ADL: 阿德雷德機場
+# OOL: 黃金海岸機場
+# CNS: 凱恩斯機場
+# DRW: 達爾文機場
+# HBA: 荷巴特機場
 
 # Flight configurations: [origins, destinations, dates]
 # Two limits the multi-city search enforces, worth knowing before editing this:
