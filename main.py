@@ -17,6 +17,12 @@ How to use it:
 folder = "./results"
 Path(folder).mkdir(parents=True, exist_ok=True)
 
+# Google searches a comma separated list of airports in one request, so merging
+# the airports of a segment costs no extra searches while a date still multiplies
+# them. Set this to False to search each airport on its own, which tells you which
+# airport is the cheap one at the cost of many more searches.
+MERGE_AIRPORTS = True
+
 
 def load_api_key():
     """Read SERPAPI_KEY from the environment, falling back to ./.env"""
@@ -144,7 +150,7 @@ def generate_combinations(flight_configs, current_flights=None, flight_index=0):
             flight_details.extend(
                 [flight["origin"], flight["destination"], flight["date"]]
             )
-        file_prefix = f"{folder}/{'_'.join(flight_details)}"
+        file_prefix = f"{folder}/{'_'.join(flight_details).replace(',', '-')}"
 
         # Check if already cached
         if Path(f"{file_prefix}_raw.json").exists():
@@ -164,8 +170,14 @@ def generate_combinations(flight_configs, current_flights=None, flight_index=0):
     # Recursive case: try all combinations for current flight
     config = flight_configs[flight_index]
 
-    for origin in config["origins"]:
-        for destination in config["destinations"]:
+    origins = config["origins"]
+    destinations = config["destinations"]
+    if MERGE_AIRPORTS:
+        origins = [",".join(origins)]
+        destinations = [",".join(destinations)]
+
+    for origin in origins:
+        for destination in destinations:
             for date in config["dates"]:
                 flight = {"origin": origin, "destination": destination, "date": date}
                 generate_combinations(
