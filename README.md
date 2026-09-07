@@ -78,13 +78,18 @@ SERPAPI_KEY=你的key
 
 **3. 編輯 `main.py` 的 `FLIGHT_CONFIGS`**
 
+一段一個 dict，`origins`、`destinations`、`dates` 都是清單，多填就會展開成更多組合。
+
 ```python
-{
-    "origins": ["TPE"],
-    "destinations": ["NRT"],
-    "dates": ["2026-11-14", "2026-12-12"],
-}
+FLIGHT_CONFIGS = [
+    {"origins": ["KIX"], "destinations": ["TPE"], "dates": ["2026-12-12"]},
+    {"origins": ["TPE"], "destinations": ["MEL"], "dates": ["2027-02-04"]},
+    {"origins": ["MEL"], "destinations": ["TPE"], "dates": ["2027-02-17"]},
+    {"origins": ["TPE"], "destinations": ["NRT"], "dates": ["2027-07-10"]},
+]
 ```
+
+頭是大阪、尾是東京，都在日本，符合頭尾同國家的規則。
 
 **4. 執行**
 
