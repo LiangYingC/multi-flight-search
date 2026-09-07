@@ -17,6 +17,7 @@ How to use it:
 folder = "./results"
 Path(folder).mkdir(parents=True, exist_ok=True)
 
+
 def load_api_key():
     """Read SERPAPI_KEY from the environment, falling back to ./.env"""
     key = os.environ.get("SERPAPI_KEY", "").strip()
@@ -44,13 +45,19 @@ endpoint = "https://serpapi.com/search.json"
 # NRT: 東京成田機場
 # KIX: 大阪關西機場
 # AKL: 奧克蘭機場
+# SYD: 雪梨機場
+# MEL: 墨爾本機場
+# BNE: 布里斯本機場
 
 # Flight configurations: [origins, destinations, dates]
+# Two limits the multi-city search enforces, worth knowing before editing this:
+# - the dates must be ascending across the segments, otherwise the API answers 400
+# - a date more than roughly 330 days out is not on sale yet and returns nothing
 FLIGHT_CONFIGS = [
     {
         "origins": ["KIX"],
         "destinations": ["TPE"], 
-        "dates": ["2026-05-04"],
+        "dates": ["2026-09-10"],
     },
     {
         "origins": ["TPE"], 
